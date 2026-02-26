@@ -15,7 +15,7 @@ func main() {
 	for {
 	   conn, err := ln.Accept()
 	   if err != nil {
-		// handle error
+		 	 fmt.Println("Couldn't connect sry")
 	   }
 	go handleConnection(conn)
 	}
