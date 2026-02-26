@@ -9,13 +9,13 @@ func main() {
  	fmt.Println("Mini messeage queue : ");
 	ln, err := net.Listen("tcp", ":8080");
 	if err != nil {
-	// handle error
+		fmt.Printf("Couldn't listen sry !\n")
 	}
 
 	for {
 	   conn, err := ln.Accept()
 	   if err != nil {
-		 	 fmt.Println("Couldn't connect sry")
+		fmt.Printf("Couldn't connect sry\n")
 	   }
 	go handleConnection(conn)
 	}
@@ -28,7 +28,7 @@ func handleConnection(conn net.Conn) {
 	for {
 		n, err := conn.Read(buff);
 		if (err != nil) {
-			fmt.Println("client disconnected !")
+			fmt.Printf("client disconnected !\n")
 			break
 		}
 
