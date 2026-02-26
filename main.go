@@ -1,4 +1,4 @@
-package main
+Package main
 
 import (
 	"fmt"
@@ -13,11 +13,11 @@ func main() {
 	}
 
 	for {
-	   conn, err := ln.Accept()
-	   if err != nil {
-		fmt.Printf("Couldn't connect sry\n")
-	   }
-	go handleConnection(conn)
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Printf("Couldn't connect sry\n")
+		}
+		go handleConnection(conn)
 	}
 }
 
