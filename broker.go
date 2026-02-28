@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"net"
+	"sync"
 )
 
 type Message struct {

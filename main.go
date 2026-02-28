@@ -1,8 +1,9 @@
-Package main
+package main
 
 import (
 	"fmt"
 	"net"
+	"encoding/json"
 )
 
 func main() {
@@ -31,8 +32,15 @@ func handleConnection(conn net.Conn) {
 			fmt.Printf("client disconnected !\n")
 			break
 		}
-
-		fmt.Printf("Received: %s\n", string(buff[:n])) // buff[:n] -> to not print toooo many 0s
+		var msg Message
+		err = json.Unmarshal(buff[:n],&msg)
+		if err != nil {
+			fmt.Printf("Invalid JSON received!\n")
+            continue
+		}
+		// fmt.Printf("Received: %s\n", string(buff[:n])) // buff[:n] -> to not print toooo many 0s
+		fmt.Printf("Parsed successfully -> Command: %s | Topic: %s | Payload: %s\n", msg.Command, msg.Topic, msg.Payload)
+		
 	}
 	
 }
