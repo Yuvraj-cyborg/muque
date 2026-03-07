@@ -18,11 +18,15 @@ func main() {
 		if err != nil {
 			fmt.Printf("Couldn't connect sry\n")
 		}
-		go handleConnection(conn)
+	myBroker := &Broker{
+		Subscribers: make(map[string][]net.Conn),
 	}
+
+	go handleConnection(conn,myBroker)
+  }
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn,b *Broker) {
 	defer conn.Close()
 	buff := make([]byte,1024)
 
@@ -40,7 +44,14 @@ func handleConnection(conn net.Conn) {
 		}
 		// fmt.Printf("Received: %s\n", string(buff[:n])) // buff[:n] -> to not print toooo many 0s
 		fmt.Printf("Parsed successfully -> Command: %s | Topic: %s | Payload: %s\n", msg.Command, msg.Topic, msg.Payload)
-		
+
+		if msg.Command == "SUB" {
+			b.Subscribe(msg.Topic, conn)
+		}else if msg.Command == "PUB" {
+			b.Publish(msg.Topic, msg.Payload)
+		} else {
+			fmt.Println("Unknown command received.")
+		}
 	}
 	
 }
