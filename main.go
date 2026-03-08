@@ -1,19 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"net"
 	"encoding/json"
+	"fmt"
+	"log"
+	"net"
 )
 
 func main() {
- 	fmt.Println("Mini messeage queue : ");
+	fmt.Println("Mini messeage queue : ")
 	myBroker := &Broker{
 		Subscribers: make(map[string][]net.Conn),
 	}
-	ln, err := net.Listen("tcp", ":8080");
+	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
-		fmt.Printf("Couldn't listen sry !\n")
+		log.Fatal(err)
 	}
 
 	for {
@@ -22,45 +23,46 @@ func main() {
 			fmt.Printf("Couldn't connect sry\n")
 		}
 
-	go handleConnection(conn,myBroker)
-  }
+		go handleConnection(conn, myBroker)
+	}
 }
 
-func handleConnection(conn net.Conn,b *Broker) {
+func handleConnection(conn net.Conn, b *Broker) {
 	defer conn.Close()
 	var myTopics []string
 
 	defer func() {
-        for _, topic := range myTopics {
-            b.RemoveSubscriber(topic, conn)
-        }
-    }()
-	
-	buff := make([]byte,1024)
+		for _, topic := range myTopics {
+			b.RemoveSubscriber(topic, conn)
+		}
+	}()
+
+	buff := make([]byte, 1024)
 
 	for {
-		n, err := conn.Read(buff);
-		if (err != nil) {
+		n, err := conn.Read(buff)
+		if err != nil {
 			fmt.Printf("client disconnected !\n")
 			break
 		}
 		var msg Message
-		err = json.Unmarshal(buff[:n],&msg)
+		err = json.Unmarshal(buff[:n], &msg)
 		if err != nil {
 			fmt.Printf("Invalid JSON received!\n")
-            continue
+			continue
 		}
 		// fmt.Printf("Received: %s\n", string(buff[:n])) // buff[:n] -> to not print toooo many 0s
 		fmt.Printf("Parsed successfully -> Command: %s | Topic: %s | Payload: %s\n", msg.Command, msg.Topic, msg.Payload)
 
-		if msg.Command == "SUB" {
+		switch msg.Command {
+		case "SUB":
 			b.Subscribe(msg.Topic, conn)
 			myTopics = append(myTopics, msg.Topic)
-		}else if msg.Command == "PUB" {
+		case "PUB":
 			b.Publish(msg.Topic, msg.Payload)
-		} else {
+		default:
 			fmt.Println("Unknown command received.")
 		}
 	}
-	
+
 }
