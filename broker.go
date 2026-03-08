@@ -1,21 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"sync"
-	"fmt"
 )
 
 type Message struct {
 	Command string `json:"command"`
 	Topic   string `json:"topic"`
-    Payload string `json:"payload"`
+	Payload string `json:"payload"`
 }
 
 type Broker struct {
 	// Topic -> Array of Sockets (what I call the hash table of pub/sub)
-    Subscribers map[string][]net.Conn
-	Lock sync.RWMutex
+	Subscribers map[string][]net.Conn
+	Lock        sync.RWMutex
 }
 
 func (b *Broker) Subscribe(topic string, conn net.Conn) {
@@ -30,27 +30,27 @@ func (b *Broker) Publish(topic string, payload string) {
 	defer b.Lock.RUnlock()
 	subscribers := b.Subscribers[topic]
 	for _, conn := range subscribers {
-        // Format the string and cast it to a byte array so the socket can send it
-        outgoingMsg := fmt.Sprintf("BROKER BROADCAST [%s]: %s\n", topic, payload)
-        conn.Write([]byte(outgoingMsg))
-    }
+		// Format the string and cast it to a byte array so the socket can send it
+		outgoingMsg := fmt.Sprintf("BROKER BROADCAST [%s]: %s\n", topic, payload)
+		conn.Write([]byte(outgoingMsg))
+	}
 
 	fmt.Printf("Broadcasted to %d subscribers on topic: %s\n", len(subscribers), topic)
 }
 
-func (b *Broker) RemoveSubscriber(topic string, conn net.Conn) {
+func (b *Broker) RemoveSubscriber(topic string, connRemove net.Conn) {
 	b.Lock.Lock()
 	defer b.Lock.Unlock()
 
 	subscribers := b.Subscribers[topic]
 
-	for i,conn := range subscribers {
-		if conn == conn {
+	for i, conn := range subscribers {
+		if conn == connRemove {
 			// Append everything BEFORE the index, with everything AFTER the index.
-            b.Subscribers[topic] = append(subscribers[:i], subscribers[i+1:]...)
-            
-            fmt.Printf("Cleaned up dead socket from topic: %s\n", topic)
-            break
+			b.Subscribers[topic] = append(subscribers[:i], subscribers[i+1:]...)
+
+			fmt.Printf("Cleaned up dead socket from topic: %s\n", topic)
+			break
 		}
 	}
 }
