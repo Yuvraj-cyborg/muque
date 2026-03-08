@@ -8,6 +8,9 @@ import (
 
 func main() {
  	fmt.Println("Mini messeage queue : ");
+	myBroker := &Broker{
+		Subscribers: make(map[string][]net.Conn),
+	}
 	ln, err := net.Listen("tcp", ":8080");
 	if err != nil {
 		fmt.Printf("Couldn't listen sry !\n")
@@ -18,9 +21,6 @@ func main() {
 		if err != nil {
 			fmt.Printf("Couldn't connect sry\n")
 		}
-	myBroker := &Broker{
-		Subscribers: make(map[string][]net.Conn),
-	}
 
 	go handleConnection(conn,myBroker)
   }
@@ -28,6 +28,14 @@ func main() {
 
 func handleConnection(conn net.Conn,b *Broker) {
 	defer conn.Close()
+	var myTopics []string
+
+	defer func() {
+        for _, topic := range myTopics {
+            b.RemoveSubscriber(topic, conn)
+        }
+    }()
+	
 	buff := make([]byte,1024)
 
 	for {
@@ -47,6 +55,7 @@ func handleConnection(conn net.Conn,b *Broker) {
 
 		if msg.Command == "SUB" {
 			b.Subscribe(msg.Topic, conn)
+			myTopics = append(myTopics, msg.Topic)
 		}else if msg.Command == "PUB" {
 			b.Publish(msg.Topic, msg.Payload)
 		} else {

@@ -37,3 +37,20 @@ func (b *Broker) Publish(topic string, payload string) {
 
 	fmt.Printf("Broadcasted to %d subscribers on topic: %s\n", len(subscribers), topic)
 }
+
+func (b *Broker) RemoveSubscriber(topic string, conn net.Conn) {
+	b.Lock.Lock()
+	defer b.Lock.Unlock()
+
+	subscribers := b.Subscribers[topic]
+
+	for i,conn := range subscribers {
+		if conn == conn {
+			// Append everything BEFORE the index, with everything AFTER the index.
+            b.Subscribers[topic] = append(subscribers[:i], subscribers[i+1:]...)
+            
+            fmt.Printf("Cleaned up dead socket from topic: %s\n", topic)
+            break
+		}
+	}
+}
